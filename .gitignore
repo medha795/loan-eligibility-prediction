@@ -211,3 +211,6 @@ data/raw/*.parquet
 data/raw/*.csv
 data/raw/*.zip
 data/raw/*.parquet
+data/raw/*.csv
+data/raw/*.zip
+data/raw/*.parquet
