@@ -208,3 +208,6 @@ __marimo__/
 data/raw/*.csv
 data/raw/*.zip
 data/raw/*.parquet
+data/raw/
+data/*.parquet
+data/*.zip
