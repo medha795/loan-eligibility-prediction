@@ -211,3 +211,4 @@ data/raw/*.parquet
 data/raw/
 data/*.parquet
 data/*.zip
+"data/processed/combined_loan_data_processed.csv"
