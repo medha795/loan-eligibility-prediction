@@ -31,7 +31,7 @@ The engineered version applies the transformations implemented in prepare_datase
 ### 📌 Source and Target
 
 Source:
-combined_loan_dataset_processed.csv
+`combined_loan_dataset_processed.csv`
 
 The merged LendingClub dataset containing raw string encodings for:
 
@@ -46,7 +46,7 @@ The merged LendingClub dataset containing raw string encodings for:
 It may include inconsistent casing, missing values, and non-standardized formats.
 
 ### Engineered Output:
-engineered_loan_dataset.csv
+`engineered_loan_dataset.csv`
 
 A model-ready dataset produced by the chunked feature-engineering pipeline.
 It contains:
@@ -67,11 +67,11 @@ Lowercases and trims all column headers to ensure consistent downstream handling
 
 Transforms textual fields into usable numeric inputs:
 
-term → term_months
-Extracts the month count from strings like "36 months".
+`term → term_months`
+* Extracts the month count from strings like "36 months".
 
-emp_length → emp_length_years
-Normalizes employment length strings:
+`emp_length → emp_length_years`
+* Normalizes employment length strings:
 
 - "< 1 year" → 0
 
@@ -79,13 +79,13 @@ Normalizes employment length strings:
 
 - "3 years" → 3
 
-Percentage fields (int_rate, dti)
+* Percentage fields (`int_rate`, `dti`)
 Strips % signs and converts to float.
 
-fico_score construction
+* `fico_score` construction
 Creates a single score by averaging:
 
-(fico_range_low + fico_range_high) / 2
+`(fico_range_low + fico_range_high) / 2`
 
 
 or using whichever value is available.
@@ -94,9 +94,9 @@ or using whichever value is available.
 
 Maps textual loan_status values to numeric:
 
-"accepted" → 1
+- "accepted" → 1
 
-"rejected" → 0
+- "rejected" → 0
 
 Drops rows with invalid or unmappable values, ensuring a clean supervised learning setup.
 
@@ -107,39 +107,39 @@ Impute with the median, preserving central tendencies without extreme values.
 
 Categorical Features:
 
-Trim whitespace
+- Trim whitespace
 
-Convert "nan" strings to true nulls
+- Convert "nan" strings to true nulls
 
-Impute missing values with the mode (or "unknown" as fallback)
+- Impute missing values with the mode (or "unknown" as fallback)
 
 #### 5. Categorical Encoding
 
-One-hot encodes all categorical features.
+- One-hot encodes all categorical features.
 
-No levels are dropped (drop_first=False), preserving full information for downstream ML models such as tree-based algorithms.
+- No levels are dropped (drop_first=False), preserving full information for downstream ML  models such as tree-based algorithms.
 
 #### 6. Schema Alignment & Scalability (Chunked Processing)
 
 Because the original dataset exceeds 30 million rows, the pipeline:
 
-Reads a large sample (e.g., 500k rows)
+- Reads a large sample (e.g., 500k rows)
 
-Engineers features → establishes the full schema
+- Engineers features → establishes the full schema
 
-Reads the rest of the dataset in chunks
+- Reads the rest of the dataset in chunks
 
-Processes each chunk and aligns columns to the established schema
+- Processes each chunk and aligns columns to the established schema
 
-Appends rows incrementally to the engineered output file
+- Appends rows incrementally to the engineered output file
 
 This approach ensures:
 
-consistent column ordering
+- consistent column ordering
 
-guaranteed presence of all expected dummy variables
+- guaranteed presence of all expected dummy variables
 
-minimal RAM usage
+- minimal RAM usage
 
 ### 🚀 Net Improvements for Modeling
 ✔ Consistent Numeric Inputs
@@ -162,8 +162,8 @@ All categorical levels are explicitly represented via one-hot encoding — essen
 
 Chunked processing allows the dataset to originate from a massive 30M+ row file while producing a final engineered dataset that:
 
-fits into memory
+- fits into memory
 
-is ML-ready
+- is ML-ready
 
-maintains schema consistency
+- maintains schema consistency
