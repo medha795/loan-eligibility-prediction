@@ -23,45 +23,47 @@ Place the following files into `data/raw/`:
 These files are ignored from Git tracking to keep the repository lightweight.
 
 
-Engineered vs. Combined Processed Loan Datasets
+## Engineered vs. Combined Processed Loan Datasets
 
 This section summarizes how the engineered_loan_dataset.csv improves upon the combined_loan_dataset_processed.csv file for modeling loan eligibility.
 The engineered version applies the transformations implemented in prepare_dataset.py to generate a dataset that is clean, consistent, and optimized for machine-learning workflows.
 
-📌 Source and Target
+### 📌 Source and Target
 
 Source:
 combined_loan_dataset_processed.csv
+
 The merged LendingClub dataset containing raw string encodings for:
 
-loan terms
+- loan terms
 
-employment length
+- employment length
 
-percentage fields
+- percentage fields
 
-categorical labels
+- categorical labels
 
 It may include inconsistent casing, missing values, and non-standardized formats.
 
-Engineered Output:
+### Engineered Output:
 engineered_loan_dataset.csv
+
 A model-ready dataset produced by the chunked feature-engineering pipeline.
 It contains:
 
-standardized numeric fields
+- standardized numeric fields
 
-one-hot encoded categorical indicators
+- one-hot encoded categorical indicators
 
-a binary target label
+- a binary target label
 
-⚙️ Key Engineering Steps
-1. Column Normalization
+### ⚙️ Key Engineering Steps
+#### 1. Column Normalization
 
 Lowercases and trims all column headers to ensure consistent downstream handling.
 (Implemented in prepare_dataset.py)
 
-2. Numeric Feature Construction
+#### 2. Numeric Feature Construction
 
 Transforms textual fields into usable numeric inputs:
 
@@ -71,11 +73,11 @@ Extracts the month count from strings like "36 months".
 emp_length → emp_length_years
 Normalizes employment length strings:
 
-"< 1 year" → 0
+- "< 1 year" → 0
 
-"10+ years" → 10
+- "10+ years" → 10
 
-"3 years" → 3
+- "3 years" → 3
 
 Percentage fields (int_rate, dti)
 Strips % signs and converts to float.
@@ -88,7 +90,7 @@ Creates a single score by averaging:
 
 or using whichever value is available.
 
-3. Target Label Mapping
+#### 3. Target Label Mapping
 
 Maps textual loan_status values to numeric:
 
@@ -98,7 +100,7 @@ Maps textual loan_status values to numeric:
 
 Drops rows with invalid or unmappable values, ensuring a clean supervised learning setup.
 
-4. Missing-Value Handling
+#### 4. Missing-Value Handling
 
 Numeric Features:
 Impute with the median, preserving central tendencies without extreme values.
@@ -111,13 +113,13 @@ Convert "nan" strings to true nulls
 
 Impute missing values with the mode (or "unknown" as fallback)
 
-5. Categorical Encoding
+#### 5. Categorical Encoding
 
 One-hot encodes all categorical features.
 
 No levels are dropped (drop_first=False), preserving full information for downstream ML models such as tree-based algorithms.
 
-6. Schema Alignment & Scalability (Chunked Processing)
+#### 6. Schema Alignment & Scalability (Chunked Processing)
 
 Because the original dataset exceeds 30 million rows, the pipeline:
 
@@ -139,7 +141,7 @@ guaranteed presence of all expected dummy variables
 
 minimal RAM usage
 
-🚀 Net Improvements for Modeling
+### 🚀 Net Improvements for Modeling
 ✔ Consistent Numeric Inputs
 
 Previously string-encoded fields (percentages, durations, employment length) become proper numerical features enabling gradients and comparisons.
