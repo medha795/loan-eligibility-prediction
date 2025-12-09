@@ -23,43 +23,145 @@ Place the following files into `data/raw/`:
 These files are ignored from Git tracking to keep the repository lightweight.
 
 
-+# Engineered vs. Combined Processed Loan Datasets
-+
-+This document summarizes how the **engineered_loan_dataset** improves upon the **combined_loan_dataset_processed** file for modeling loan eligibility. The engineered version applies transformations implemented in `prepare_data.py` to make the data more suitable for machine-learning workflows.
-+
-+## Source and Target
-+- **Source:** `combined_loan_dataset_processed.csv` is the merged LendingClub file that retains raw string encodings for terms, employment length, percentages, and category labels. It may include inconsistent casing and missing values.
-+- **Engineered output:** `engineered_loan_dataset.csv` is the model-ready table produced by the chunked pipeline. It contains standardized numeric fields, one-hot encoded categoricals, and a binary target label.
-+
-+## Key Engineering Steps
-+
-+### Column normalization
-+- Lowercases and trims all column headers for consistent downstream handling before any other processing.【F:prepare_data.py†L99-L125】
-+
-+### Numeric feature construction
-+- Converts text fields to numeric equivalents:
-+  - `term` → `term_months` by extracting the month count from strings like "36 months".
-+  - `emp_length` → `emp_length_years` by normalizing strings (e.g., "< 1 year" → 0, "10+ years" → 10).
-+  - Percentage strings in `int_rate` and `dti` are stripped of `%` and cast to floats.
-+- Builds a single `fico_score` by averaging the high and low bounds when both are present (or using whichever is available).
-+
-+### Target label mapping
-+- Maps the text `loan_status` label to a binary indicator (`accepted` → 1, `rejected` → 0) and drops rows with invalid labels, ensuring the engineered set only contains usable targets.
-+
-+### Missing-value handling
-+- For numeric columns, fills `NaN` values with the column median to keep distributions stable without creating extreme values.
-+- For categorical columns, trims whitespace, converts placeholder strings "nan" to nulls, and imputes with the mode (or "unknown" if no mode exists).
-+
-+### Categorical encoding
-+- One-hot encodes all remaining categorical features without dropping the first level, preserving full information for models that do not require dummy-variable dropping.
-+
-+### Schema alignment and scalability
-+- Processes the massive source file in chunks: a large initial sample establishes the full schema, then each subsequent chunk is engineered and reindexed to that schema before being appended. This prevents missing columns and keeps memory usage manageable on 30M+ rows.
-+
-+## Net Improvements for Modeling
-+- **Consistent numeric inputs:** Percentage and tenure fields become numeric, enabling algorithms to learn gradients from them instead of parsing strings.
-+- **Reduced leakage and noise:** Invalid target labels are removed early, and all features are standardized to lower-case, reducing mismatches from inconsistent casing.
-+- **Robust handling of sparsity:** Median/mode imputation keeps rows usable while minimizing distribution shifts; categorical dummies ensure models receive explicit indicators for every level observed in the sample.
-+- **Operational readiness:** Chunked processing yields a single, schema-stable CSV that fits in memory when consumed by training pipelines, while still originating from the large combined raw dataset.
-+
-+These steps collectively transform the raw combined data into an optimized feature matrix tailored for training loan eligibility prediction models.
+Engineered vs. Combined Processed Loan Datasets
+
+This section summarizes how the engineered_loan_dataset.csv improves upon the combined_loan_dataset_processed.csv file for modeling loan eligibility.
+The engineered version applies the transformations implemented in prepare_dataset.py to generate a dataset that is clean, consistent, and optimized for machine-learning workflows.
+
+📌 Source and Target
+
+Source:
+combined_loan_dataset_processed.csv
+The merged LendingClub dataset containing raw string encodings for:
+
+loan terms
+
+employment length
+
+percentage fields
+
+categorical labels
+
+It may include inconsistent casing, missing values, and non-standardized formats.
+
+Engineered Output:
+engineered_loan_dataset.csv
+A model-ready dataset produced by the chunked feature-engineering pipeline.
+It contains:
+
+standardized numeric fields
+
+one-hot encoded categorical indicators
+
+a binary target label
+
+⚙️ Key Engineering Steps
+1. Column Normalization
+
+Lowercases and trims all column headers to ensure consistent downstream handling.
+(Implemented in prepare_dataset.py)
+
+2. Numeric Feature Construction
+
+Transforms textual fields into usable numeric inputs:
+
+term → term_months
+Extracts the month count from strings like "36 months".
+
+emp_length → emp_length_years
+Normalizes employment length strings:
+
+"< 1 year" → 0
+
+"10+ years" → 10
+
+"3 years" → 3
+
+Percentage fields (int_rate, dti)
+Strips % signs and converts to float.
+
+fico_score construction
+Creates a single score by averaging:
+
+(fico_range_low + fico_range_high) / 2
+
+
+or using whichever value is available.
+
+3. Target Label Mapping
+
+Maps textual loan_status values to numeric:
+
+"accepted" → 1
+
+"rejected" → 0
+
+Drops rows with invalid or unmappable values, ensuring a clean supervised learning setup.
+
+4. Missing-Value Handling
+
+Numeric Features:
+Impute with the median, preserving central tendencies without extreme values.
+
+Categorical Features:
+
+Trim whitespace
+
+Convert "nan" strings to true nulls
+
+Impute missing values with the mode (or "unknown" as fallback)
+
+5. Categorical Encoding
+
+One-hot encodes all categorical features.
+
+No levels are dropped (drop_first=False), preserving full information for downstream ML models such as tree-based algorithms.
+
+6. Schema Alignment & Scalability (Chunked Processing)
+
+Because the original dataset exceeds 30 million rows, the pipeline:
+
+Reads a large sample (e.g., 500k rows)
+
+Engineers features → establishes the full schema
+
+Reads the rest of the dataset in chunks
+
+Processes each chunk and aligns columns to the established schema
+
+Appends rows incrementally to the engineered output file
+
+This approach ensures:
+
+consistent column ordering
+
+guaranteed presence of all expected dummy variables
+
+minimal RAM usage
+
+🚀 Net Improvements for Modeling
+✔ Consistent Numeric Inputs
+
+Previously string-encoded fields (percentages, durations, employment length) become proper numerical features enabling gradients and comparisons.
+
+✔ Cleaner & More Reliable Target Labels
+
+Invalid or ambiguous loan_status entries are removed, improving downstream training quality.
+
+✔ Robust Missing-Value Strategy
+
+Median/mode imputation prevents sample loss while preserving feature distributions.
+
+✔ High-Quality Categorical Representation
+
+All categorical levels are explicitly represented via one-hot encoding — essential for interpretability and model stability.
+
+✔ Operationally Scalable
+
+Chunked processing allows the dataset to originate from a massive 30M+ row file while producing a final engineered dataset that:
+
+fits into memory
+
+is ML-ready
+
+maintains schema consistency
